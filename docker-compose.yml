@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: eatumy_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: eatumyholder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5439:5432"
+
+  backend:
+    build: ./backend
+    container_name: eatumy_backend
+    restart: always
+    ports:
+      - "5999:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/eatumyholder?schema=public
+      - JWT_SECRET=eatumy_super_secret_v1
+      - PORT=5000
+    command: sh -c "npx prisma db push && npm start"
+    depends_on:
+      - db
+
+  admin-web:
+    build:
+      context: ./admin-web
+      args:
+        NEXT_PUBLIC_API_URL: http://192.210.239.211:5999/api
+    container_name: eatumy_admin
+    restart: always
+    ports:
+      - "3998:3000"
+    depends_on:
+      - backend
+
+  shareholder-web:
+    build:
+      context: ./shareholder-web
+      args:
+        NEXT_PUBLIC_API_URL: http://192.210.239.211:5999/api
+    container_name: eatumy_shareholder
+    restart: always
+    ports:
+      - "3999:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

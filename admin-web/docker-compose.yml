@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  admin-web:
+    build: .
+    container_name: admin-web
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
