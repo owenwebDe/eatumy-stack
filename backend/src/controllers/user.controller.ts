@@ -71,10 +71,19 @@ export class UserController {
   }
 
   static async create(req: Request, res: Response) {
-    const { name, mobile, role = 'INVESTOR' } = req.body;
+    const { name, mobile, email, role = 'INVESTOR' } = req.body;
     try {
-      const existingUser = await prisma.user.findUnique({ where: { mobile } });
-      if (existingUser) {
+      if (!email || !mobile) {
+        return res.status(400).json({ error: 'Both email and mobile are required' });
+      }
+
+      const existingUserEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingUserEmail) {
+        return res.status(400).json({ error: 'User with this email already exists' });
+      }
+
+      const existingUserMobile = await prisma.user.findUnique({ where: { mobile } });
+      if (existingUserMobile) {
         return res.status(400).json({ error: 'User with this mobile already exists' });
       }
 
@@ -82,6 +91,7 @@ export class UserController {
         data: {
           name,
           mobile,
+          email,
           role,
           status: 'ACTIVE',
           notifications: {
@@ -97,6 +107,18 @@ export class UserController {
     } catch (error) {
       console.error("Create user error:", error);
       res.status(500).json({ error: 'Failed to create shareholder', details: error instanceof Error ? error.message : String(error) });
+    }
+  }
+
+  static async delete(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const user = await prisma.user.delete({
+        where: { id: id as string }
+      });
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete user' });
     }
   }
 }

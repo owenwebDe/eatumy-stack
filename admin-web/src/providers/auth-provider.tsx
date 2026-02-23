@@ -12,15 +12,15 @@ type User = {
 
 type AuthContextType = {
   user: User;
-  login: (mobile: string, otp: string) => Promise<void>;
+  login: (email: string, otp: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  login: async () => {},
-  logout: () => {},
+  login: async () => { },
+  logout: () => { },
   isLoading: true,
 });
 
@@ -53,17 +53,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [pathname, router]);
 
-  const login = async (mobile: string, otp: string) => {
+  const login = async (email: string, otp: string) => {
     // Determine user role (Super Admin vs Admin) during login
     // For now, assume OTP verification via specialized endpoint or generic login
-    const { data } = await api.post("/auth/verify-otp", { 
-        mobile, 
-        otp
+    const { data } = await api.post("/auth/verify-otp", {
+      email,
+      otp
     });
-    
+
     // Check if user is authorized (ADMIN/SUPERADMIN/BRANCH_MANAGER)
     if (data.user.role !== 'ADMIN' && data.user.role !== 'SUPERADMIN' && data.user.role !== 'BRANCH_MANAGER') {
-        throw new Error("Unauthorized access");
+      throw new Error("Unauthorized access");
     }
 
     localStorage.setItem("admin_token", data.token);

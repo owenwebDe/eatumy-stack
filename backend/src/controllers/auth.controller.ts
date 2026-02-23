@@ -4,53 +4,55 @@ import { AuthService } from '../services/auth.service.js';
 
 export class AuthController {
   static async requestOTP(req: Request, res: Response) {
-    const { mobile } = req.body;
+    const { email } = req.body;
 
-    if (!mobile) {
-      return res.status(400).json({ error: 'Mobile number is required' });
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required' });
     }
 
     try {
-      const user = await prisma.user.findUnique({ where: { mobile } });
-      if (!user) {
+      console.log(`[AUTH] Request OTP for email: "${email}"`);
+      const user = await prisma.user.findUnique({ where: { email } });
+
+      const isTestEmail = email === 'admin@test.com' || email === 'investor@test.com' || email === 'Equitrust99@gmail.com';
+      if (!user && !isTestEmail) {
+        console.warn(`[AUTH] Account not found for email: ${email}`);
         return res.status(404).json({ error: 'Account not found. Please contact administration.' });
       }
 
-      // Generate and "send" OTP
-      AuthService.generateOTP(mobile);
-      res.json({ message: 'OTP sent successfully' });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to request OTP' });
+      const success = await AuthService.generateOTP(email);
+
+      if (success) {
+        res.json({ message: 'OTP sent successfully to your email.' });
+      } else {
+        res.status(500).json({ error: 'Failed to send OTP email. Please try again later.' });
+      }
+    } catch (error: any) {
+      console.error("[AUTH] Request OTP Error:", error);
+      res.status(500).json({ error: `Failed to request OTP: ${error.message}` });
     }
   }
 
   static async verifyOTP(req: Request, res: Response) {
-    const { mobile, otp, forcedRole } = req.body;
-    console.log(`[AUTH] Verify OTP Request - Mobile: ${mobile}, OTP: ${otp}`);
+    const { email, otp, forcedRole } = req.body;
 
-    if (!mobile || !otp) {
-      return res.status(400).json({ error: 'Mobile and OTP are required' });
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
     }
 
-    const isValid = AuthService.verifyOTP(mobile, otp);
+    console.log(`[AUTH] Verifying OTP for email: "${email}"`);
+
+    const isValid = await AuthService.verifyOTP(email, otp);
 
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid or expired OTP' });
     }
 
     try {
-      let user = await prisma.user.findUnique({ where: { mobile } });
+      let user = await prisma.user.findUnique({ where: { email } });
 
       if (!user) {
         return res.status(404).json({ error: 'Account not found.' });
-      }
-
-      if (forcedRole && user.role !== forcedRole) {
-          // Strict Role Check for Admin Panel vs Shareholder App separation
-          // Ideally, we might just return the user and let frontend handle redirect, 
-          // but for security, maybe we deny login if trying to access admin as investor?
-          // For now, we will allow login but the frontend receiving the user object 
-          // should act accordingly.
       }
 
       const token = AuthService.generateToken(user);
@@ -62,6 +64,7 @@ export class AuthController {
           name: user.name,
           role: user.role,
           mobile: user.mobile,
+          email: user.email,
           status: user.status
         }
       });
@@ -73,35 +76,35 @@ export class AuthController {
 
   static async getMe(req: Request, res: Response) {
     try {
-        // @ts-ignore
-        const userId = req.user?.id;
-        
-        if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+      // @ts-ignore
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          mobile: true,
+          email: true,
+          role: true,
+          status: true,
+          walletBalance: true,
+          kycStatus: true
         }
+      });
 
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                name: true,
-                mobile: true,
-                email: true,
-                role: true,
-                status: true,
-                walletBalance: true,
-                kycStatus: true
-            }
-        });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
 
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({ user });
+      res.json({ user });
     } catch (error) {
-        console.error("GetMe Error:", error);
-        res.status(500).json({ error: "Failed to fetch user profile" });
+      console.error("GetMe Error:", error);
+      res.status(500).json({ error: "Failed to fetch user profile" });
     }
   }
 }

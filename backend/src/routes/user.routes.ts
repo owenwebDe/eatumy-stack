@@ -13,5 +13,6 @@ router.get('/', authMiddleware, adminOnly, UserController.getAll);
 router.post('/', authMiddleware, adminOnly, UserController.create);
 // router.post('/', UserController.create); // TEMP: Disable auth for testing
 router.put('/:id/kyc', authMiddleware, adminOnly, UserController.updateKyc);
+router.delete('/:id', authMiddleware, adminOnly, UserController.delete);
 
 export default router;

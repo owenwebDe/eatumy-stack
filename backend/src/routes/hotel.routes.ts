@@ -12,5 +12,6 @@ router.get('/:id', HotelController.getById);
 router.post('/', authMiddleware, adminOnly, HotelController.create);
 router.put('/:id', authMiddleware, adminOnly, HotelController.update);
 router.put('/:id/assign-manager', authMiddleware, adminOnly, HotelController.assignManager);
+router.delete('/:id', authMiddleware, adminOnly, HotelController.delete);
 
 export default router;
