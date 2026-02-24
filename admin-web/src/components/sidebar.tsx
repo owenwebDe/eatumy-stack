@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  IndianRupee, 
-  History, 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  IndianRupee,
+  History,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   ClipboardList,
   Briefcase,
-  BarChart3
+  BarChart3,
+  UserCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { icon: Building2, label: "Kitchens", path: "/dashboard/kitchens" },
   { icon: ClipboardList, label: "Daily Orders", path: "/dashboard/orders" },
   { icon: Users, label: "Shareholders", path: "/dashboard/shareholders" },
+  { icon: UserCog, label: "Branch Managers", path: "/dashboard/branch-managers" },
   { icon: Briefcase, label: "Investment Requests", path: "/dashboard/investments" },
   { icon: IndianRupee, label: "Financials", path: "/dashboard/finance" },
   { icon: ShieldCheck, label: "KYC Verification", path: "/dashboard/kyc" },
@@ -38,7 +40,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div 
+    <div
       className={cn(
         "h-screen sticky top-0 sidebar-gradient text-white flex flex-col transition-all duration-300 border-r border-white/10",
         isCollapsed ? "w-20" : "w-64"
@@ -63,13 +65,13 @@ export function Sidebar() {
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;
           return (
-            <Link 
-              key={item.path} 
+            <Link
+              key={item.path}
               href={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "text-white/60 hover:text-white hover:bg-white/5"
               )}
             >
@@ -87,16 +89,24 @@ export function Sidebar() {
 
       {/* Footer Actions */}
       <div className="p-4 border-t border-white/10 space-y-2">
-        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all">
+        <Link
+          href="/dashboard/settings"
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all",
+            pathname === "/dashboard/settings"
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+              : "text-white/60 hover:text-white hover:bg-white/5"
+          )}
+        >
           <Settings className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span className="font-medium text-sm">Settings</span>}
-        </button>
+        </Link>
         <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all">
           <LogOut className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span className="font-medium text-sm">Sign Out</span>}
         </button>
 
-        <button 
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="w-full mt-4 flex items-center justify-center p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
         >

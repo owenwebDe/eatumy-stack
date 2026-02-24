@@ -2,116 +2,143 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Lock, HelpCircle } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Mail, HelpCircle, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
-import { toast } from "sonner"; // Assuming sonner is available or will use alert
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
+
     try {
       await api.post('/auth/request-otp', { email });
       localStorage.setItem('login_email', email);
       router.push("/login/otp");
     } catch (error: any) {
       console.error("Failed to send OTP:", error);
-      const msg = error.response?.data?.error || "Failed to find account. Contact Support.";
-      // alert(msg); // Using alert for simplicity if toast not set up
-      // Or if sonner is installed:
-      // toast.error(msg);
-      alert(msg);
+      const msg = error.response?.data?.error || "Account not found. Please contact support.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-background p-6">
-      <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="mb-6 h-12 w-12 flex items-center justify-center rounded-xl bg-primary/5 text-primary">
-            <Lock className="h-6 w-6" />
-          </div>
+    <main className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Abstract Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-[#0f172a]/5 rounded-full blur-3xl" />
+      </div>
 
-          <h1 className="mb-2 text-3xl font-bold font-heading">Welcome Back</h1>
-          <p className="mb-8 text-muted-foreground">
-            Enter your registered email address to access your portfolio.
-          </p>
-
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Email Address
-              </label>
-              <div className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-lg ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <input
-                  id="email"
-                  type="email"
-                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                  placeholder="investor@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoFocus
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-[440px] z-10"
+      >
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden">
+          <div className="p-10 pt-12 text-center">
+            <div className="flex justify-center mb-8">
+              <div className="h-20 w-auto flex items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <img
+                  src="/PortShare/logo.png"
+                  alt="Eatumy Logo"
+                  className="h-12 w-auto object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://eatumy.com/favicon.ico"; // Tiny fallback
+                  }}
                 />
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-bold rounded-xl"
-              disabled={email.length < 5 || isLoading}
-            >
-              {isLoading ? "Verifying..." : "Continue Securely"}
-              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
-          </form>
+            <h1 className="text-3xl md:text-4xl font-black font-heading tracking-tight text-slate-900 mb-2">
+              Shareholder Portal <span className="text-primary text-xs align-top bg-primary/10 px-2 py-0.5 rounded-full ml-1 font-bold">v1.2</span>
+            </h1>
+            <p className="text-sm md:text-base text-slate-500 mb-10 font-medium max-w-[320px] mx-auto leading-relaxed">
+              Log in to your secure investor dashboard to manage your portfolio.
+            </p>
 
-          <div className="mt-8 pt-6 border-t text-center space-y-4">
-            <div className="p-4 bg-muted/30 rounded-2xl border border-dashed">
-              <p className="text-xs font-medium text-muted-foreground mb-3">Don't have an account yet?</p>
-              <Button
-                variant="outline"
-                className="w-full h-10 text-xs font-bold gap-2"
-                onClick={() => {
-                  window.location.href = "mailto:enquiry@eatumy.com?subject=Investment%20Enquiry";
-                }}
-              >
-                <HelpCircle className="h-4 w-4" /> Enquire about Investment
-              </Button>
-            </div>
+            <form onSubmit={handleSendOtp} className="space-y-6">
+              <div className="text-left space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Email Address</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <input
+                    required
+                    type="email"
+                    className="w-full h-14 pl-12 pr-4 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold text-lg focus:border-slate-900 focus:bg-white outline-none transition-all"
+                    placeholder="investor@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-            {/* Dev Helper - Remove in Prod */}
-            <div className="opacity-50 hover:opacity-100 transition-opacity">
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mb-1">Dev Tool</p>
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <Button
-                variant="ghost"
-                className="w-full h-8 text-[10px] font-bold text-muted-foreground hover:bg-slate-100"
-                onClick={() => {
-                  setEmail("investor@test.com");
-                }}
+                type="submit"
+                disabled={email.length < 5 || isLoading}
+                className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Auto-Fill Test Email
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    Continue Securely
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
+            </form>
+
+            <div className="mt-10 pt-8 border-t border-slate-50">
+              <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Institutional Support</p>
+                <button
+                  onClick={() => window.location.href = "mailto:enquiry@eatumy.com?subject=Investment%20Enquiry"}
+                  className="w-full h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <HelpCircle className="h-4 w-4" /> Investment Enquiry
+                </button>
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
 
-      <p className="text-center text-[10px] text-muted-foreground pb-4 opacity-60">
-        By continuing, you accept our Terms of Service and Privacy Policy.
-      </p>
+        <div className="mt-8 text-center">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Authorized Access Only</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <span className="text-[9px] text-slate-300 font-medium">Terms of Service</span>
+            <span className="text-[9px] text-slate-300 font-medium">Privacy Policy</span>
+          </div>
+        </div>
+      </motion.div>
     </main>
   );
 }

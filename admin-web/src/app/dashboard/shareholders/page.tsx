@@ -22,7 +22,11 @@ import {
     Loader2,
     X,
     Wallet,
-    IndianRupee
+    IndianRupee,
+    Edit,
+    UserX,
+    Trash2,
+    FileCheck
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -30,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api"; // Access axios instance
 import { toast } from "sonner"; // Assuming sonner is available
 import { Button } from "@/components/ui/button"; // Assuming Button component exists
+import Link from "next/link";
 
 export default function ShareholdersPage() {
     const [shareholders, setShareholders] = useState<any[]>([]);
@@ -46,7 +51,18 @@ export default function ShareholdersPage() {
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
     const [newUserName, setNewUserName] = useState("");
     const [newUserMobile, setNewUserMobile] = useState("");
+    const [newUserEmail, setNewUserEmail] = useState("");
     const [isAddingUser, setIsAddingUser] = useState(false);
+
+    // Edit User State
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editEmail, setEditEmail] = useState("");
+    const [editMobile, setEditMobile] = useState("");
+    const [isEditingUser, setIsEditingUser] = useState(false);
+
+    const [isTerminating, setIsTerminating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchShareholders();
@@ -54,8 +70,7 @@ export default function ShareholdersPage() {
 
     const fetchShareholders = async () => {
         try {
-            const { data } = await api.get('/users');
-            // Filter only INVESTOR role if needed, but backend might return all
+            const { data } = await api.get('/users?role=INVESTOR');
             setShareholders(data);
         } catch (error) {
             console.error("Failed to fetch shareholders", error);
@@ -138,7 +153,62 @@ export default function ShareholdersPage() {
         }
     };
 
-    const [newUserEmail, setNewUserEmail] = useState("");
+    const handleEditUser = async () => {
+        if (!selectedUser || !editName || !editMobile || !editEmail) return;
+        setIsEditingUser(true);
+        try {
+            const { data } = await api.put(`/users/${selectedUser.id}`, {
+                name: editName,
+                mobile: editMobile,
+                email: editEmail
+            });
+            toast.success("Shareholder updated successfully");
+            setIsEditOpen(false);
+            setSelectedUser(data);
+            setShareholders(prev => prev.map(u => u.id === selectedUser.id ? data : u));
+        } catch (error: any) {
+            console.error("Edit User Error:", error);
+            toast.error(error.response?.data?.error || "Failed to edit shareholder");
+        } finally {
+            setIsEditingUser(false);
+        }
+    };
+
+    const handleTerminateUser = async () => {
+        if (!selectedUser) return;
+        const confirm = window.confirm("Are you sure you want to terminate this shareholder? They will no longer have access.");
+        if (!confirm) return;
+        setIsTerminating(true);
+        try {
+            const { data } = await api.put(`/users/${selectedUser.id}/terminate`);
+            toast.success("Shareholder terminated");
+            setSelectedUser(data);
+            setShareholders(prev => prev.map(u => u.id === selectedUser.id ? data : u));
+        } catch (error: any) {
+            console.error("Terminate User Error:", error);
+            toast.error(error.response?.data?.error || "Failed to terminate shareholder");
+        } finally {
+            setIsTerminating(false);
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        if (!selectedUser) return;
+        const confirm = window.confirm("WARNING: This will permanently delete the shareholder and all their data! Proceed?");
+        if (!confirm) return;
+        setIsDeleting(true);
+        try {
+            await api.delete(`/users/${selectedUser.id}`);
+            toast.success("Shareholder deleted");
+            setSelectedUser(null);
+            setShareholders(prev => prev.filter(u => u.id !== selectedUser.id));
+        } catch (error: any) {
+            console.error("Delete User Error:", error);
+            toast.error(error.response?.data?.error || "Failed to delete shareholder");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const filteredUsers = shareholders.filter(user =>
         user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -255,15 +325,22 @@ export default function ShareholdersPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-0.5">
-                                                <h4 className="font-bold text-sm truncate">{user.name}</h4>
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase",
-                                                    user.kycStatus === 'VERIFIED' ? "bg-emerald-100 text-emerald-700" :
-                                                        user.kycStatus === 'REJECTED' ? "bg-red-100 text-red-700" :
-                                                            "bg-amber-100 text-amber-700"
-                                                )}>
-                                                    {user.kycStatus || 'PENDING'}
-                                                </span>
+                                                <h4 className={cn("font-bold text-sm truncate", user.status === 'INACTIVE' && "line-through text-slate-400")}>{user.name}</h4>
+                                                <div className="flex gap-1 ml-2">
+                                                    {user.status === 'INACTIVE' && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase bg-slate-100 text-slate-500">
+                                                            Terminated
+                                                        </span>
+                                                    )}
+                                                    <span className={cn(
+                                                        "px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase",
+                                                        user.kycStatus === 'VERIFIED' ? "bg-emerald-100 text-emerald-700" :
+                                                            user.kycStatus === 'REJECTED' ? "bg-red-100 text-red-700" :
+                                                                "bg-amber-100 text-amber-700"
+                                                    )}>
+                                                        {user.kycStatus || 'PENDING'}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 <span>{user.mobile}</span>
@@ -300,13 +377,78 @@ export default function ShareholdersPage() {
                                     <p className="text-sm text-muted-foreground font-medium">{selectedUser.email || "No Email"}</p>
                                     <p className="text-sm text-muted-foreground font-medium">{selectedUser.mobile}</p>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedUser(null)}
-                                    className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
-                                >
-                                    <X className="h-4 w-4 text-slate-400" />
-                                </button>
+                                <div className="flex gap-2">
+                                    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                                        <DialogTrigger asChild>
+                                            <button
+                                                onClick={() => {
+                                                    setEditName(selectedUser.name);
+                                                    setEditEmail(selectedUser.email || "");
+                                                    setEditMobile(selectedUser.mobile);
+                                                }}
+                                                className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
+                                            >
+                                                <Edit className="h-4 w-4 text-slate-500" />
+                                            </button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Shareholder</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Full Name</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full p-3 bg-muted/50 rounded-xl border outline-none font-bold"
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Email Address</label>
+                                                    <input
+                                                        type="email"
+                                                        className="w-full p-3 bg-muted/50 rounded-xl border outline-none font-bold"
+                                                        value={editEmail}
+                                                        onChange={(e) => setEditEmail(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Mobile Number</label>
+                                                    <input
+                                                        type="tel"
+                                                        className="w-full p-3 bg-muted/50 rounded-xl border outline-none font-bold"
+                                                        value={editMobile}
+                                                        onChange={(e) => setEditMobile(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button onClick={handleEditUser} disabled={isEditingUser || !editName || !editMobile || !editEmail} className="w-full font-bold h-12 rounded-xl">
+                                                    {isEditingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <button
+                                        onClick={() => setSelectedUser(null)}
+                                        className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+                                    >
+                                        <X className="h-4 w-4 text-slate-400" />
+                                    </button>
+                                </div>
                             </div>
+
+                            {selectedUser.status === 'INACTIVE' && (
+                                <div className="mb-6 p-4 bg-slate-100 rounded-2xl border border-slate-200 flex items-start gap-3">
+                                    <UserX className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-700">Account Terminated</h4>
+                                        <p className="text-xs text-slate-500 font-medium mt-1">This user can no longer log in. They only remain here for historical records.</p>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-6 flex-1">
                                 {/* Financials Card */}
@@ -390,6 +532,28 @@ export default function ShareholdersPage() {
                                             <p className="text-xs text-muted-foreground">No bank details added yet.</p>
                                         )}
                                     </div>
+                                    <Link href={`/dashboard/shareholders/${selectedUser.id}/kyc`} className="mt-4 flex w-full items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold h-10 rounded-xl text-xs transition-colors">
+                                        <FileCheck className="h-4 w-4" /> Manage KYC Documents
+                                    </Link>
+                                </div>
+                                <div className="flex gap-3 pt-6 border-t border-border/50">
+                                    <button
+                                        onClick={handleTerminateUser}
+                                        disabled={selectedUser.status === 'TERMINATED' || isTerminating}
+                                        className={cn(
+                                            "flex-1 h-12 rounded-xl font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2",
+                                            selectedUser.status === 'TERMINATED' ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                        )}
+                                    >
+                                        {isTerminating ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserX className="h-4 w-4" /> Terminate</>}
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteUser}
+                                        disabled={isDeleting}
+                                        className="h-12 w-12 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shrink-0"
+                                    >
+                                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>

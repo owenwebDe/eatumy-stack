@@ -20,6 +20,7 @@ app.use(cors({
 app.use(express.json());
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health Check
 app.get('/health', async (req, res) => {

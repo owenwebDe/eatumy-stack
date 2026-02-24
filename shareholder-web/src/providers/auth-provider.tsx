@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthProvider: Token set, forcing navigation to dashboard");
 
       // Force navigation using window.location to bypass router issues
-      window.location.href = "/dashboard";
+      window.location.href = "/PortShare/dashboard";
     } catch (error) {
       console.error("AuthProvider: Login failed", error);
       throw error; // Propagate to caller

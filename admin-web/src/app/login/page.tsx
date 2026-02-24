@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { Users, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "@/lib/api";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -19,15 +20,12 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // In a real flow, this would request an OTP
-      // For now, we simulate success and move to OTP step
-      // The actual verify endpoint handles the logic
-      setTimeout(() => {
-        setStep(2);
-        setIsLoading(false);
-      }, 1000);
+      await api.post('/auth/request-otp', { email });
+      setStep(2);
     } catch (err: any) {
-      setError(err.message || "Failed to send OTP");
+      console.error("OTP Request Error:", err);
+      setError(err.response?.data?.error || "Failed to send OTP. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -86,6 +84,12 @@ export default function LoginPage() {
                   </div>
                 </div>
 
+                {error && (
+                  <p className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl flex items-center gap-2">
+                    {error}
+                  </p>
+                )}
+
                 <button
                   type="submit"
                   disabled={email.length < 5 || isLoading}
@@ -93,23 +97,6 @@ export default function LoginPage() {
                 >
                   {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Request Access <ArrowRight className="h-4 w-4" /></>}
                 </button>
-
-                <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail('admin@test.com');
-                      setStep(2);
-                      setTimeout(() => {
-                        setOtp('1234');
-                        login('admin@test.com', '1234');
-                      }, 500);
-                    }}
-                    className="w-full h-10 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs tracking-wide hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 border border-emerald-100"
-                  >
-                    🚀 Quick Admin Access
-                  </button>
-                </div>
               </motion.form>
             ) : (
               <motion.form
@@ -132,7 +119,7 @@ export default function LoginPage() {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       className="w-full h-14 pl-12 pr-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-lg focus:border-slate-900 outline-none transition-colors tracking-widest"
-                      placeholder="Any Code"
+                      placeholder="Security Code"
                       autoFocus
                     />
                   </div>

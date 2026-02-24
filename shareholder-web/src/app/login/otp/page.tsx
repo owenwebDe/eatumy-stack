@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Lock } from "lucide-react";
+import { ArrowRight, Lock, Loader2, ShieldCheck, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -13,6 +14,7 @@ export default function OTPPage() {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('login_email');
@@ -25,78 +27,116 @@ export default function OTPPage() {
 
   const handleVerify = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    console.log("Verify button clicked. Email:", email, "OTP:", otp);
     setIsLoading(true);
+    setError("");
 
     try {
-      console.log("Calling login function...");
       await login(email, otp);
-      console.log("Login successful, redirecting...");
-      // Login function handles redirect
-    } catch (error) {
-      console.error("Login failed in component:", error);
-      alert("Login failed. Check console for details.");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      setError("Invalid security code. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-background p-6">
-      <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="mb-6 h-12 w-12 flex items-center justify-center rounded-xl bg-primary/5 text-primary">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
+    <main className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl opacity-60" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-[#ea580c]/5 rounded-full blur-3xl opacity-60" />
+      </div>
 
-          <h1 className="mb-2 text-3xl font-bold font-heading">Security Check</h1>
-          <p className="mb-8 text-muted-foreground">
-            Enter the code sent to <span className="font-bold text-foreground">{email}</span>
-          </p>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-[440px] z-10"
+      >
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden relative">
+          <div className="p-10 text-center">
 
-          <form onSubmit={handleVerify} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                One-Time Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full h-14 pl-12 pr-4 bg-background border border-input rounded-xl font-bold text-lg focus:ring-2 focus:ring-primary outline-none transition-all tracking-widest placeholder:font-normal placeholder:tracking-normal"
-                  placeholder="Any Code (e.g. 1234)"
-                  autoFocus
+            <div className="flex justify-center mb-8">
+              <div className="relative h-12 w-auto">
+                <img
+                  src="/PortShare/logo.png"
+                  alt="Eatumy"
+                  className="h-12 w-auto object-contain"
                 />
               </div>
             </div>
 
-            <Button
-              type="submit"
-              onClick={handleVerify}
-              className="w-full h-12 text-base"
-              disabled={otp.length < 1 || isLoading}
-            >
-              {isLoading ? "Verifying..." : "Verify & Login"}
-              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
-          </form>
+            <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
 
-          <div className="mt-8 text-center text-sm">
-            <button
-              onClick={() => router.push('/login')}
-              className="text-muted-foreground hover:text-primary transition-colors"
-            >
-              Change Email
-            </button>
+            <h1 className="text-2xl font-black font-heading tracking-tight text-slate-900 mb-2">Security Check</h1>
+            <p className="text-sm text-slate-500 mb-8 font-medium">
+              We've sent a 6-digit code to <br />
+              <span className="text-slate-900 font-bold">{email}</span>
+            </p>
+
+            <form onSubmit={handleVerify} className="space-y-6">
+              <div className="text-left space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Security Code</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <input
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    className="w-full h-14 pl-12 pr-4 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold text-lg focus:border-slate-900 focus:bg-white outline-none transition-all tracking-[0.2em] placeholder:tracking-normal placeholder:font-normal"
+                    placeholder="Enter Code"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={otp.length < 1 || isLoading}
+                className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    Verify & Access Portfolio
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-8 pt-6 border-t border-slate-50">
+              <button
+                onClick={() => router.push('/login')}
+                className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors flex items-center justify-center gap-2 mx-auto"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Change email address
+              </button>
+            </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Authorized High-Security Portal</p>
+          <p className="text-[9px] text-slate-300 mt-2">© 2026 Eatumy Ecosystem. All rights reserved.</p>
+        </div>
+      </motion.div>
     </main>
   );
 }

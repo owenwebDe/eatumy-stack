@@ -67,10 +67,10 @@ export default function KitchensPage() {
 
     const fetchUsers = async () => {
         try {
-            const { data } = await api.get('/users');
+            const { data } = await api.get('/users?role=BRANCH_MANAGER');
             setUsers(data);
         } catch (error) {
-            console.error("Failed to fetch users", error);
+            console.error("Failed to fetch branch managers", error);
         }
     };
 
