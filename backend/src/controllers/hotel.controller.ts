@@ -27,8 +27,8 @@ export class HotelController {
       }
 
       // Transform to include raised amount
-      const enrichedHotels = hotels.map(hotel => {
-        const raised = hotel.investments.reduce((sum, inv) => sum + inv.investedAmount, 0);
+      const enrichedHotels = hotels.map((hotel: any) => {
+        const raised = hotel.investments.reduce((sum: number, inv: any) => sum + inv.investedAmount, 0);
         const { investments, ...rest } = hotel; // Remove raw investments array
         return {
           ...rest,

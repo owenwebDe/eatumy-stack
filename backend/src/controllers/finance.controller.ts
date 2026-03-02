@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
 import { NotificationService } from '../services/notification.service.js';
+import { Prisma } from '@prisma/client';
 
 export class FinancialController {
   // Allocate Profit for a Hotel for a specific month
@@ -73,7 +74,7 @@ export class FinancialController {
     const { hotelId, month } = req.body;
 
     try {
-      const results = await prisma.$transaction(async (tx) => {
+      const results = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Fetch unpaid ledger entries
         const unpaidEntries = await tx.profitLedger.findMany({
           where: {
@@ -164,7 +165,7 @@ export class FinancialController {
       res.json({
         totalEarned: totalProfit._sum.profitPaid || 0,
         pendingPayout: pendingProfit._sum.profitAllocated || 0,
-        recentDividends: recentDividends.map(d => ({
+        recentDividends: recentDividends.map((d: any) => ({
           hotel: d.hotel.name,
           amount: d.profitPaid,
           date: d.month
@@ -232,7 +233,7 @@ export class FinancialController {
     const { id } = req.params;
     const withdrawalId = id as string;
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const withdrawal = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
         if (!withdrawal || withdrawal.status !== 'PENDING') throw new Error("Invalid withdrawal");
 

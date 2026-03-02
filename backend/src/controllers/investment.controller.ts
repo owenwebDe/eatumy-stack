@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
 import { NotificationService } from '../services/notification.service.js';
+import { Prisma } from '@prisma/client';
 
 export class InvestmentController {
   static async getAll(req: Request, res: Response) {
@@ -89,7 +90,7 @@ export class InvestmentController {
     }
 
     try {
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const investment = await tx.investment.findUnique({ where: { id: investmentId } });
         if (!investment || investment.status !== 'PENDING') {
           throw new Error("Investment request not found or already processed");

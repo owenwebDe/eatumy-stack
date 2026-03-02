@@ -3,7 +3,6 @@ dist
 build
 .next
 .cache
-.env
 .DS_Store
 *.log
 npm-debug.log*

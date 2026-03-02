@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
+import { Prisma } from '@prisma/client';
 
 export class DailyMetricController {
   static async create(req: Request, res: Response) {
@@ -181,7 +182,7 @@ export class DailyMetricController {
         monthlyData[key] = { month: key, revenue: 0, expenses: 0 };
       }
 
-      metrics.forEach(m => {
+      metrics.forEach((m: any) => {
         const d = new Date(m.date);
         const monthName = d.toLocaleString('default', { month: 'short' });
         const year = d.getFullYear();

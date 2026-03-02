@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
 import { NotificationService } from '../services/notification.service.js';
+import { Prisma } from '@prisma/client';
 
 export class WalletController {
     static async deposit(req: Request, res: Response) {
@@ -14,7 +15,7 @@ export class WalletController {
 
         try {
             // Transaction: Update Balance + Log Transaction
-            const result = await prisma.$transaction(async (tx) => {
+            const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                 const user = await tx.user.update({
                     where: { id: userId },
                     data: {
@@ -130,7 +131,7 @@ export class WalletController {
 
         try {
             // @ts-ignore
-            const result = await prisma.$transaction(async (tx) => {
+            const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                 const request = await tx.depositRequest.findUnique({ where: { id: requestId } });
                 if (!request || request.status !== 'PENDING') {
                     throw new Error("Invalid request");
