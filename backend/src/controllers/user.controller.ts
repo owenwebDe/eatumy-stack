@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
+import { NotificationService } from '../services/notification.service.js';
 
 export class UserController {
   static async getAll(req: Request, res: Response) {
@@ -106,6 +107,14 @@ export class UserController {
           status: 'APPROVED'
         }
       });
+
+      // Notify Admins
+      await NotificationService.notifyAdmins({
+        title: 'New KYC Document Uploaded',
+        message: `User (ID: ${id}) uploaded a new KYC document (${type}).`,
+        type: 'KYC_SUBMISSION'
+      });
+
       res.status(201).json(doc);
     } catch (error) {
       res.status(500).json({ error: 'Failed to add KYC document' });

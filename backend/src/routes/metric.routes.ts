@@ -7,7 +7,7 @@ const router = Router();
 router.post('/', authMiddleware, DailyMetricController.create);
 router.get('/system-stats', authMiddleware, adminOnly, DailyMetricController.getSystemStats);
 router.get('/fleet-summary', authMiddleware, DailyMetricController.getDailyFleetSummary);
-router.get('/all', authMiddleware, adminOnly, DailyMetricController.getAll);
+router.get('/performance', authMiddleware, adminOnly, DailyMetricController.getPerformanceStats);
 router.get('/:hotelId', authMiddleware, DailyMetricController.getByHotel);
 
 export default router;

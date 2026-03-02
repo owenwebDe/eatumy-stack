@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Lock, Loader2, ShieldCheck, ChevronLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/providers/auth-provider";
 
 export default function OTPPage() {
@@ -41,28 +40,31 @@ export default function OTPPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-4 md:p-6 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl opacity-60" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-[#ea580c]/5 rounded-full blur-3xl opacity-60" />
+        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-[#ea580c]/5 rounded-full blur-[80px]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0, scale: 0.98, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
         className="w-full max-w-[440px] z-10"
       >
-        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden relative">
-          <div className="p-10 text-center">
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden">
+          <div className="p-8 md:p-12 text-center">
 
             <div className="flex justify-center mb-8">
-              <div className="relative h-12 w-auto">
+              <div className="h-16 w-auto flex items-center justify-center">
                 <img
                   src="/PortShare/logo.png"
                   alt="Eatumy"
-                  className="h-12 w-auto object-contain"
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="text-2xl font-black text-slate-900">EATUMY</span>';
+                  }}
                 />
               </div>
             </div>
@@ -98,11 +100,17 @@ export default function OTPPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
-                  {error}
-                </div>
-              )}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <Button
                 type="submit"
@@ -133,8 +141,8 @@ export default function OTPPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Authorized High-Security Portal</p>
-          <p className="text-[9px] text-slate-300 mt-2">© 2026 Eatumy Ecosystem. All rights reserved.</p>
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Authorized High-Security Portal</p>
+          <p className="text-[9px] text-slate-300 mt-2 font-bold uppercase tracking-wider">© 2026 Eatumy Ecosystem.</p>
         </div>
       </motion.div>
     </main>

@@ -13,6 +13,7 @@ import { NotificationDrawer } from "@/components/notification-drawer";
 import { useAuth } from "@/providers/auth-provider";
 import api from "@/lib/api";
 import { getMediaUrl } from "@/lib/utils";
+import { EarningsHistory } from "@/components/earnings-history";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function DashboardPage() {
   const [portfolio, setPortfolio] = useState<any[]>([]);
   const [walletBalance, setWalletBalance] = useState(0); // New State
   const [totalAssetValue, setTotalAssetValue] = useState(0);
+  const [profitEarned, setProfitEarned] = useState(0);
+  const [recentDividends, setRecentDividends] = useState<any[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
@@ -41,9 +44,11 @@ export default function DashboardPage() {
 
         // Fetch User's Investments
         const { data: investments } = await api.get('/investments');
-        const totalValue = investments.reduce((acc: number, inv: any) => acc + inv.investedAmount, 0);
+        const approvedInvestments = investments.filter((inv: any) => inv.status === 'APPROVED');
+        const totalValue = approvedInvestments.reduce((acc: number, inv: any) => acc + inv.investedAmount, 0);
+
         setTotalAssetValue(totalValue);
-        setPortfolio(investments);
+        setPortfolio(investments); // We keep all for filtering in UI
 
         // Always fetch featured hotels
         const { data: hotels } = await api.get('/hotels');
@@ -53,6 +58,11 @@ export default function DashboardPage() {
         const dateStr = new Date().toISOString().split('T')[0];
         const { data: fleetStats } = await api.get(`/metrics/fleet-summary?date=${dateStr}`);
         setKitchenStats(fleetStats);
+
+        // Fetch Profit Stats
+        const { data: profitStats } = await api.get('/finance/stats');
+        setProfitEarned(profitStats.totalEarned);
+        setRecentDividends(profitStats.recentDividends);
 
         // Fetch Notifications Count
         const { data: notifications } = await api.get('/notifications');
@@ -113,7 +123,10 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Wallet Balance</p>
                   <h2 className="text-4xl font-bold font-heading">₹{walletBalance.toLocaleString()}</h2>
-                  <p className="text-xs text-slate-500 mt-1">Total Assets: ₹{totalAssetValue.toLocaleString()}</p>
+                  <div className="flex gap-4 mt-2">
+                    <p className="text-xs text-slate-500">Assets: ₹{totalAssetValue.toLocaleString()}</p>
+                    <p className="text-xs text-emerald-400 font-bold">Profit: ₹{profitEarned.toLocaleString()}</p>
+                  </div>
                 </div>
                 <div className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/20 text-[10px] font-bold">
                   <TrendingUp className="h-3 w-3 inline mr-1" /> ACTIVE
@@ -181,15 +194,18 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Earnings History */}
+        <EarningsHistory dividends={recentDividends} />
+
         {/* Portfolio Section */}
         <div>
           <h3 className="text-lg font-bold font-heading mb-4 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-primary" />
-            {portfolio.length > 0 ? "Your Cloud Kitchens" : "Featured Opportunities"}
+            {portfolio.filter(p => p.status === 'APPROVED').length > 0 ? "Your Portfolio" : "Featured Opportunities"}
           </h3>
 
           <div className="space-y-3">
-            {portfolio.length === 0 && (
+            {portfolio.filter(p => p.status === 'APPROVED').length === 0 && (
               <>
                 {/* We reuse the portfolio state to show opportunities if empty */}
                 {/* But we need to fetch them first. Let's do that in useEffect */}
@@ -243,7 +259,7 @@ export default function DashboardPage() {
               </>
             )}
 
-            {portfolio.map((item, idx) => (
+            {portfolio.filter(p => p.status === 'APPROVED').map((item, idx) => (
               <Link href={`/dashboard/hotels/${item.hotel.id}`} key={item.id} className="block">
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
@@ -284,6 +300,32 @@ export default function DashboardPage() {
                 </motion.div>
               </Link>
             ))}
+
+            {/* Pending Requests */}
+            {portfolio.filter(p => p.status === 'PENDING').length > 0 && (
+              <div className="mt-8">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Pending Requests</h4>
+                <div className="space-y-3">
+                  {portfolio.filter(p => p.status === 'PENDING').map((item, idx) => (
+                    <div key={item.id} className="bg-muted/30 rounded-2xl p-4 border border-dashed flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                          {item.hotel.name[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{item.hotel.name}</p>
+                          <p className="text-[10px] text-muted-foreground">Awaiting Admin Verification</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold">₹{item.investedAmount.toLocaleString()}</p>
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">PENDING</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

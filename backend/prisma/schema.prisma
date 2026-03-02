@@ -50,6 +50,12 @@ enum KYCStatus {
   REJECTED
 }
 
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id         String    @id @default(cuid())
   role       Role      @default(INVESTOR)
@@ -86,6 +92,9 @@ enum NotificationType {
   WITHDRAWAL_APPROVED
   WITHDRAWAL_REJECTED
   WITHDRAWAL_PAID
+  BANK_VERIFICATION
+  SHARE_PURCHASE_REQUEST
+  KYC_SUBMISSION
   GENERAL
 }
 
@@ -173,16 +182,19 @@ model WalletTransaction {
 }
 
 model BankAccount {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  user          User               @relation(fields: [userId], references: [id])
   accountName   String
   accountNumber String // Encrypted
   ifsc          String
   bankName      String
   upiId         String?
-  isDefault     Boolean  @default(false)
-  created_at    DateTime @default(now())
+  isDefault     Boolean            @default(false)
+  status        VerificationStatus @default(PENDING)
+  rejectionReason String?
+  verifiedAt    DateTime?
+  created_at    DateTime           @default(now())
 
   @@index([userId])
 }

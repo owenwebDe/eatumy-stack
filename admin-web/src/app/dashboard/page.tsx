@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { 
-  Users, 
-  Building2, 
-  IndianRupee, 
+import {
+  Users,
+  Building2,
+  IndianRupee,
   AlertCircle,
   TrendingUp,
   ArrowRight,
@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+
+import { PerformanceChart } from "@/components/performance-chart";
 
 const RECENT_WITHDRAWALS: any[] = [];
 
@@ -28,42 +30,42 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchStats = async () => {
-        try {
-            const { data } = await api.get('/metrics/system-stats');
-            setStats(data);
-        } catch (error) {
-            console.error("Failed to fetch system stats", error);
-        }
+      try {
+        const { data } = await api.get('/metrics/system-stats');
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch system stats", error);
+      }
     }
     fetchStats();
   }, []);
 
   const STATS_DATA = [
-    { 
-      label: "Total Shareholders", 
-      value: stats.shareholders.toLocaleString(), 
-      trend: "Total Registered", 
+    {
+      label: "Total Shareholders",
+      value: stats.shareholders.toLocaleString(),
+      trend: "Total Registered",
       icon: Users,
       color: "bg-blue-500/10 text-blue-600"
     },
-    { 
-      label: "Active Kitchens", 
-      value: stats.kitchens.toString(), 
-      trend: "Live Operations", 
+    {
+      label: "Active Kitchens",
+      value: stats.kitchens.toString(),
+      trend: "Live Operations",
       icon: Building2,
       color: "bg-emerald-500/10 text-emerald-600"
     },
-    { 
-      label: "Pending Withdrawals", 
-      value: "₹" + stats.pendingWithdrawals.toLocaleString(), 
-      trend: "Process Queue", 
+    {
+      label: "Pending Withdrawals",
+      value: "₹" + stats.pendingWithdrawals.toLocaleString(),
+      trend: "Process Queue",
       icon: AlertCircle,
       color: "bg-amber-500/10 text-amber-600"
     },
-    { 
-      label: "System Liability", 
-      value: "₹" + stats.walletBalance.toLocaleString(), 
-      trend: "Total Wallet Balances", 
+    {
+      label: "System Liability",
+      value: "₹" + stats.walletBalance.toLocaleString(),
+      trend: "Total Wallet Balances",
       icon: IndianRupee,
       color: "bg-primary/10 text-primary"
     },
@@ -121,16 +123,14 @@ export default function DashboardPage() {
 
           {/* Performance Chart Placeholder */}
           <section className="bg-card border rounded-2xl p-6 shadow-sm">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold">Ecosystem Performance</h3>
-                <div className="flex gap-2 text-xs">
-                    <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-primary" /> Revenue</span>
-                    <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-slate-300" /> Payouts</span>
-                </div>
-             </div>
-             <div className="h-64 flex items-center justify-center bg-muted/20 rounded-xl border border-dashed border-muted-foreground/30 text-muted-foreground font-medium italic">
-                Analytics Chart (Recharts) Placeholder
-             </div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold">Ecosystem Performance</h3>
+              <div className="flex gap-2 text-xs">
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-primary" /> Revenue</span>
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-slate-300" /> Payouts</span>
+              </div>
+            </div>
+            <PerformanceChart />
           </section>
         </div>
 
@@ -145,7 +145,7 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-4">
               {RECENT_WITHDRAWALS.length === 0 && (
-                  <p className="text-center text-xs text-muted-foreground py-4">No pending withdrawals.</p>
+                <p className="text-center text-xs text-muted-foreground py-4">No pending withdrawals.</p>
               )}
               {RECENT_WITHDRAWALS.map((w, idx) => (
                 <div key={idx} className="flex items-center justify-between group">
@@ -176,25 +176,25 @@ export default function DashboardPage() {
           </section>
 
           <section className="bg-slate-900 rounded-2xl p-6 text-white overflow-hidden relative shadow-xl">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl -mr-16 -mt-16" />
-             <div className="relative z-10">
-                <h4 className="font-bold text-lg mb-2">Monthly Allocation</h4>
-                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-                    October profit allocation is ready to be processed for all active kitchens.
-                </p>
-                <div className="bg-white/10 rounded-xl p-4 border border-white/10 mb-6">
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</p>
-                            <p className="text-sm font-bold text-primary">Ready to preview</p>
-                        </div>
-                        <TrendingUp className="h-6 w-6 text-primary/30" />
-                    </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl -mr-16 -mt-16" />
+            <div className="relative z-10">
+              <h4 className="font-bold text-lg mb-2">Monthly Allocation</h4>
+              <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                October profit allocation is ready to be processed for all active kitchens.
+              </p>
+              <div className="bg-white/10 rounded-xl p-4 border border-white/10 mb-6">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</p>
+                    <p className="text-sm font-bold text-primary">Ready to preview</p>
+                  </div>
+                  <TrendingUp className="h-6 w-6 text-primary/30" />
                 </div>
-                <button className="w-full py-3 bg-primary text-primary-foreground font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95">
-                    Start Allocation Wizard
-                </button>
-             </div>
+              </div>
+              <button className="w-full py-3 bg-primary text-primary-foreground font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95">
+                Start Allocation Wizard
+              </button>
+            </div>
           </section>
         </div>
       </div>

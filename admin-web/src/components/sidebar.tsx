@@ -16,7 +16,8 @@ import {
   ClipboardList,
   Briefcase,
   BarChart3,
-  UserCog
+  UserCog,
+  Landmark
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { icon: UserCog, label: "Branch Managers", path: "/dashboard/branch-managers" },
   { icon: Briefcase, label: "Investment Requests", path: "/dashboard/investments" },
   { icon: IndianRupee, label: "Financials", path: "/dashboard/finance" },
+  { icon: Landmark, label: "Bank Approvals", path: "/dashboard/banks" },
   { icon: ShieldCheck, label: "KYC Verification", path: "/dashboard/kyc" },
   { icon: BarChart3, label: "Reports", path: "/dashboard/reports" },
   { icon: History, label: "Audit Logs", path: "/dashboard/logs" },

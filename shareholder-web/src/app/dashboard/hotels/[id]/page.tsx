@@ -24,13 +24,15 @@ export default function HotelDetailsPage({ params }: { params: Promise<{ id: str
   const [investmentAmount, setInvestmentAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [userInvestment, setUserInvestment] = useState<any>(null);
 
   useEffect(() => {
     const fetchHotelAndProfile = async () => {
       try {
-        const [hotelRes, profileRes] = await Promise.all([
+        const [hotelRes, profileRes, investmentRes] = await Promise.all([
           api.get(`/hotels/${id}`),
-          api.get('/auth/me')
+          api.get('/auth/me'),
+          api.get('/investments')
         ]);
         setHotel(hotelRes.data);
         const profile = profileRes.data;
@@ -38,6 +40,9 @@ export default function HotelDetailsPage({ params }: { params: Promise<{ id: str
         // Fallback to profile.walletBalance if structure changes
         const balance = profile.user?.walletBalance ?? profile.walletBalance ?? 0;
         setWalletBalance(balance);
+
+        const myInvestment = investmentRes.data.find((inv: any) => inv.hotelId === id);
+        setUserInvestment(myInvestment);
       } catch (error) {
         console.error("Failed to fetch data", error);
       } finally {
@@ -125,9 +130,22 @@ export default function HotelDetailsPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <Button className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/25" onClick={() => setIsBuyOpen(true)}>
-            Buy Shares Now <ArrowUpRight className="ml-2 h-5 w-5" />
-          </Button>
+          {userInvestment ? (
+            <div className={`w-full p-4 rounded-xl border flex flex-col items-center gap-2 ${userInvestment.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'
+              }`}>
+              <div className="flex items-center gap-2 font-bold">
+                {userInvestment.status === 'APPROVED' ? <TrendingUp className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}
+                {userInvestment.status === 'APPROVED' ? 'Active Investment' : 'Investment Pending'}
+              </div>
+              <p className="text-sm font-medium">
+                ₹{userInvestment.investedAmount.toLocaleString()} {userInvestment.status === 'APPROVED' ? 'Working for you' : 'Awaiting confirmation'}
+              </p>
+            </div>
+          ) : (
+            <Button className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/25" onClick={() => setIsBuyOpen(true)}>
+              Buy Shares Now <ArrowUpRight className="ml-2 h-5 w-5" />
+            </Button>
+          )}
 
           {/* Metrics Grid */}
           <div className="grid grid-cols-2 gap-4">

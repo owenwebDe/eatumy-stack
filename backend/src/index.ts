@@ -62,7 +62,10 @@ import notificationRoutes from './routes/notification.routes.js';
 app.use('/api/notifications', notificationRoutes);
 
 import uploadRoutes from './routes/upload.routes.js';
+import bankRoutes from './routes/bank.routes.js';
+
 app.use('/api/upload', uploadRoutes);
+app.use('/api/banks', bankRoutes);
 
 app.listen(port, async () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

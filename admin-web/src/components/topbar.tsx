@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Search, User, Menu } from "lucide-react";
+import { Search, User, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./notification-bell";
 
 export function TopBar() {
   return (
@@ -10,23 +11,20 @@ export function TopBar() {
         <button className="lg:hidden p-2 -ml-2 hover:bg-muted rounded-lg transition-colors">
           <Menu className="h-5 w-5" />
         </button>
-        
+
         <div className="relative max-w-md w-full hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input 
-            type="text" 
-            placeholder="Search shareholders, kitchens or transactions..." 
+          <input
+            type="text"
+            placeholder="Search shareholders, kitchens or transactions..."
             className="w-full h-10 pl-10 pr-4 bg-muted/50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
           />
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative p-2 hover:bg-muted rounded-xl transition-all group">
-          <Bell className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
-          <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 border-2 border-background rounded-full" />
-        </button>
-        
+        <NotificationBell />
+
         <div className="h-8 w-px bg-border mx-1" />
 
         <button className="flex items-center gap-3 p-1.5 hover:bg-muted rounded-xl transition-all group">
@@ -39,6 +37,6 @@ export function TopBar() {
           </div>
         </button>
       </div>
-    </header>
+    </header >
   );
 }
