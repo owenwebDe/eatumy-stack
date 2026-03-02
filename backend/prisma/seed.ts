@@ -1,7 +1,5 @@
-
-import { PrismaClient, Role, Status, ShareModel, WithdrawMode } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Role, Status, ShareModel, WithdrawMode } from '@prisma/client';
+import prisma from '../src/utils/prisma.js';
 
 async function main() {
     console.log('Seeding database...');
@@ -96,8 +94,8 @@ async function main() {
     for (const hotel of activeHotels) {
         // Check if metric exists for today
         const today = new Date();
-        today.setHours(0,0,0,0);
-        
+        today.setHours(0, 0, 0, 0);
+
         const metric = await prisma.dailyMetric.findUnique({
             where: {
                 hotelId_date: {
