@@ -45,10 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) {
       setIsLoading(false);
       // If we are on a protected route, redirect to login
-      //if (!pathname.startsWith("/login") && pathname !== "/") {
+      if (!pathname.startsWith("/login") && pathname !== "/" && pathname !== "/login/otp") {
         console.log("AuthProvider: No token, redirecting to login from", pathname);
         router.push("/login");
-      //}
+      }
       return;
     }
 
