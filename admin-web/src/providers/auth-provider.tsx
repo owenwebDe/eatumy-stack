@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem("admin_token");
       if (!token) {
         setIsLoading(false);
-        if (pathname !== "/login") router.push("/login");
+        router.push("/login");
         return;
       }
 
