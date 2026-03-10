@@ -59,7 +59,7 @@ export default function OTPPage() {
             <div className="flex justify-center mb-8">
               <div className="h-16 w-auto flex items-center justify-center">
                 <img
-                  src="/PortShare/logo.png"
+                  src="/logo.png"
                   alt="Eatumy"
                   className="h-16 w-auto object-contain"
                   onError={(e) => {

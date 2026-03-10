@@ -34,7 +34,7 @@ api.interceptors.response.use(
         localStorage.removeItem('shareholder_token');
         // Optional: Redirect to login if not already there
         if (!window.location.pathname.includes('/login')) {
-            window.location.href = '/PortShare/login';
+            window.location.href = '/login';
         }
       }
     }
